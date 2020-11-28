@@ -47,11 +47,11 @@ def insert_url_content(post, mf2type):
 mf2dict = {}
 mf2dict["items"] = []
 
-client = Client('https://pilch.me/xmlrpc.php', 'pilch', 'wdEFhUrLTr4N')
+client = Client('https://exampleblog.com/xmlrpc.php', 'url', 'password')
 # Get profile of user that is logged in
 blogauthor = client.call(users.GetProfile())
 author = {}
-author['url'] = 'https://pilch.me/author/pilch' #blogauthor.url
+author['url'] = #'https://pilch.me/author/pilch' #blogauthor.url
 author['type'] = "person"
 author['id'] = blogauthor.id
 author['nickname'] = blogauthor.nickname
