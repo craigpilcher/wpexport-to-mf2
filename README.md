@@ -6,7 +6,9 @@ This library takes WordPress XML-RPC input, and creates a dictionary of Activity
 
 ## Usage
 
-  python3 wp-to-mf2.py
+  python3 wp-to-mf2.py blogurl userid password
+
+where userid and password are the credentials of your WordPress user.
 
 ## Dependencies
 
