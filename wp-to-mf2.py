@@ -5,12 +5,12 @@ import sys,re
 
 DEBUG = 1
 MF2_URL_CLASSES = {
-        'mf2_bookmark-of' : 'response u-bookmark-of h-cite'
-        'mf2_repost-of' : 'h-cite response u-repost-of'#'response'
-        'mf2_read-of': 'h-cite response u-read-of'
-        'mf2_photo' : 'response attachment-large u-photo'
-        'mf2_like-of' : 'response u-like-of h-cite'
-        'mf2_in-reply-to' : 'h-cite response u-in-reply-to'#
+        'mf2_bookmark-of' : 'response u-bookmark-of h-cite',
+        'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
+        'mf2_read-of': 'h-cite response u-read-of',
+        'mf2_photo' : 'response attachment-large u-photo',
+        'mf2_like-of' : 'response u-like-of h-cite',
+        'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
         #TODO: add watch
         }
 
