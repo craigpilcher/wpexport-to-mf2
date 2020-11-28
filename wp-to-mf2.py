@@ -11,6 +11,7 @@ MF2_URL_CLASSES = {
         'mf2_photo' : 'response attachment-large u-photo'
         'mf2_like-of' : 'response u-like-of h-cite'
         'mf2_in-reply-to' : 'h-cite response u-in-reply-to'#
+        #TODO: add watch
         }
 
 # pull relevant URL out of garbled metadata
@@ -108,6 +109,7 @@ for post in myposts:
         elif trm.name == 'Reply':
             debug_print( 'Reply')
             process_mf2_data(post, 'mf2_in-reply-to')
+        #TODO: add watch
 	#print post.custom_fields
 	#print post.post_status
 	#print "content: " + post.content + "\n\tterms: " + post.terms + "\n"
