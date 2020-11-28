@@ -1,8 +1,9 @@
 from wordpress_xmlrpc import Client
 from wordpress_xmlrpc.methods import posts, taxonomies, users
 from granary import microformats2
-import re
+import sys,re
 
+DEBUG = 1
 MF2_URL_CLASSES = {
         'mf2_bookmark-of' : 'response u-bookmark-of h-cite'
         #'mf2_repost-of' : #'response'
@@ -43,15 +44,22 @@ def get_clean_custom_fields(post):
 def insert_url_content(post, mf2type):
     urlstring = '<section class=\"' + MF2_URL_CLASSES[mf2type] + '\"><a href=\"' + parse_response(post.custom_fields[mf2type]) + '\" class = \"p-name u-url\">'
     
+def debug_print(string):
+    if DEBUG:
+        print(string)
 	
+blogurl = sys.argv[1]
+bloguser = sys.argv[2]
+blogpassword = sys.argv[3]
+
 mf2dict = {}
 mf2dict["items"] = []
 
-client = Client('https://exampleblog.com/xmlrpc.php', 'url', 'password')
+client = Client(blogurl + '/xmlrpc.php', bloguser, blogpassword)
 # Get profile of user that is logged in
 blogauthor = client.call(users.GetProfile())
 author = {}
-author['url'] = #'https://pilch.me/author/pilch' #blogauthor.url
+#author['url'] = blogauthor.url #no URL defined in XML-RPC
 author['type'] = "person"
 author['id'] = blogauthor.id
 author['nickname'] = blogauthor.nickname
@@ -76,27 +84,27 @@ for post in myposts:
     postdict['title'] = post.title
     postdict['attributedTo'] = author
     customfields = get_clean_custom_fields(post)
-    print(customfields)
+    debug_print(customfields)
     #postdict['object']
     for trm in post.terms:
     	#print trm.name
         if trm.name == 'Bookmark':
-            print( 'Bookmark')
+            debug_print( 'Bookmark')
             process_mf2_data(post, 'mf2_bookmark-of')
         elif trm.name == 'Repost':
-            print( 'Repost')
+            debug_print( 'Repost')
             process_mf2_data(post, 'mf2_repost-of')
         elif trm.name == 'Read':
-            print( 'Read')
+            debug_print( 'Read')
             process_mf2_data(post, 'mf2_read-of')
         elif trm.name == 'Image':
-            print( 'Image')
+            debug_print( 'Image')
             process_mf2_data(post, 'mf2_photo')
         elif trm.name == 'Like':
-            print( 'Like')
+            debug_print( 'Like')
             process_mf2_data(post, 'mf2_like-of')
         elif trm.name == 'Reply':
-            print( 'Reply')
+            debug_print( 'Reply')
             process_mf2_data(post, 'mf2_in-reply-to')
 	#print post.custom_fields
 	#print post.post_status
@@ -108,8 +116,8 @@ for post in myposts:
     itemdict['object'] = postdict
     mf2dict['items'].append(itemdict)
 	
-print(mf2dict)
-print('\n')
+debug_print(mf2dict)
+debug_print('\n')
 mf2 = microformats2.object_to_json(mf2dict)
 print(mf2)
 
