@@ -6,11 +6,11 @@ import sys,re
 DEBUG = 1
 MF2_URL_CLASSES = {
         'mf2_bookmark-of' : 'response u-bookmark-of h-cite'
-        #'mf2_repost-of' : #'response'
-        #'mf2_read-of': #
-        #'mf2_photo' :
-        #'mf2_like-of' :
-        #'mf2_in-reply-to' : #
+        'mf2_repost-of' : 'h-cite response u-repost-of'#'response'
+        'mf2_read-of': 'h-cite response u-read-of'
+        'mf2_photo' : 'response attachment-large u-photo'
+        'mf2_like-of' : 'response u-like-of h-cite'
+        'mf2_in-reply-to' : 'h-cite response u-in-reply-to'#
         }
 
 # pull relevant URL out of garbled metadata
@@ -43,6 +43,8 @@ def get_clean_custom_fields(post):
 #prepend response properties URL to post content
 def insert_url_content(post, mf2type):
     urlstring = '<section class=\"' + MF2_URL_CLASSES[mf2type] + '\"><a href=\"' + parse_response(post.custom_fields[mf2type]) + '\" class = \"p-name u-url\">'
+    #section only seems to work on bookmark and like and reply, others put class directly in href linka
+    #TODO: parse name from custom field
     
 def debug_print(string):
     if DEBUG:
