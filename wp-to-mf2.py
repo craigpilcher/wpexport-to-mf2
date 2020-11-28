@@ -1,9 +1,19 @@
 from wordpress_xmlrpc import Client
 from wordpress_xmlrpc.methods import posts, taxonomies, users
 from granary import microformats2
-import sys,re
+import sys,re,string
 
 DEBUG = 1
+MF2_TYPES = {
+        'bookmark' : 'mf2_bookmark-of',
+        'repost' : 'mf2_repost-of',
+        'read' : 'mf2_read-of',
+        'image' : 'mf2_photo',
+        'Like': 'mf2_like-of',
+        'Reply' : 'mf2_in-reply-to',
+        #TODO: add watch
+        }
+
 MF2_URL_CLASSES = {
         'mf2_bookmark-of' : 'response u-bookmark-of h-cite',
         'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
@@ -73,8 +83,10 @@ def get_clean_custom_fields(post):
 	return fields
 
 #prepend response properties URL to post content
-def insert_url_content(post, mf2type):
-    urlstring = '<section class=\"' + MF2_URL_CLASSES[mf2type] + '\"><a href=\"' + parse_response(post.custom_fields[mf2type]) + '\" class = \"p-name u-url\">'
+def insert_url_content(post, customfields, mf2type):
+    if mf2type = bookmark:
+        urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2type] + '\"><a href=\"' + customfields[mf2type]) + '\" class = \"p-name u-url\">'
+        urlstringmid = customfields[MF2_PARSE_FIELDS[mf2type]]
     #section only seems to work on bookmark and like and reply, others put class directly in href linka
     #TODO: parse name from custom field
     
@@ -106,17 +118,19 @@ author['displayName'] = blogauthor.display_name
 #for term in terms:
 #	print "name: " + term.name + ", id: " + term.id
 
-myposts = client.call(posts.GetPosts({'number': 5, 'offset': 0, 'post-status': 'publish'}))
+totalitems = 5
+
+myposts = client.call(posts.GetPosts({'number': totalitems, 'offset': 0, 'post-status': 'publish'}))
 for post in myposts:
 	#print post.post_status
     postdict = {}
     customfields = {}
     postdict['published'] = post.date #date
     postdict['verb'] = 'post'
-    postdict['id'] = post.id
-    postdict['url'] = post.link #url
-    postdict['title'] = post.title
-    postdict['attributedTo'] = author
+    postdict['id'] = post.link #url 
+    postdict['url'] = post.link #url also
+    postdict['displayName'] = post.title
+    postdict['author'] = author
     customfields = get_clean_custom_fields(post)
     debug_print(customfields)
     #postdict['object']
@@ -124,34 +138,35 @@ for post in myposts:
     	#print trm.name
         if trm.name == 'Bookmark':
             debug_print( 'Bookmark')
-            process_mf2_data(customfields, 'mf2_bookmark-of')
+            customfields = process_mf2_data(customfields, 'mf2_bookmark-of')
         elif trm.name == 'Repost':
             debug_print( 'Repost')
-            process_mf2_data(customfields, 'mf2_repost-of')
+            customfields = process_mf2_data(customfields, 'mf2_repost-of')
         elif trm.name == 'Read':
             debug_print( 'Read')
-            process_mf2_data(customfields, 'mf2_read-of')
+            customfields = process_mf2_data(customfields, 'mf2_read-of')
         elif trm.name == 'Image':
             debug_print( 'Image')
-            process_mf2_data(customfields, 'mf2_photo')
+            customfields = process_mf2_data(customfields, 'mf2_photo')
         elif trm.name == 'Like':
             debug_print( 'Like')
-            process_mf2_data(customfields, 'mf2_like-of')
+            customfields = process_mf2_data(customfields, 'mf2_like-of')
         elif trm.name == 'Reply':
             debug_print( 'Reply')
-            process_mf2_data(customfields, 'mf2_in-reply-to')
+            customfields = process_mf2_data(customfields, 'mf2_in-reply-to')
         #TODO: add watch
 	#print post.custom_fields
 	#print post.post_status
 	#print "content: " + post.content + "\n\tterms: " + post.terms + "\n"
     #print( "\n")
     postdict['content'] = post.content
-    postdict['object'] = customfields
+    #postdict['object'] = customfields
     itemdict = {}
     itemdict['@context'] = 'https://www.w3.org/ns/activitystreams'
     itemdict['object'] = postdict
     mf2dict['items'].append(itemdict)
 	
+mf2dict['totalItems'] = totalitems
 debug_print(mf2dict)
 debug_print('\n')
 mf2 = microformats2.object_to_json(mf2dict)
