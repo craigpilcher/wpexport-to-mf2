@@ -13,32 +13,63 @@ MF2_URL_CLASSES = {
         'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
         #TODO: add watch
         }
+		
+#('url', 'name')
+MF2_PARSE_FIELDS = {
+        'mf2_bookmark-of' : ('url', 'name'),
+        #'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
+        #'mf2_read-of': 'h-cite response u-read-of',
+        #'mf2_photo' : 'response attachment-large u-photo',
+        #'mf2_like-of' : 'response u-like-of h-cite',
+        #'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
+    }
+
+#split garbled string, pull out relevant items
+def parse_response_list(respstring, valkey):
+    strlist = respstring.split('\"')
+    retdict = {}
+    i = 0
+    while i < len(strlist):
+        if strlist[i] in MF2_PARSE_FIELDS[valkey]:
+            retdict[strlist[i]] = strlist[i+2]
+        i += 1
+    return retdict
 
 # pull relevant URL out of garbled metadata
-def parse_response(respstring):
+def parse_response_re(respstring):
 	#print respstring
 	possible_urls = re.findall(r'(http[s?]://[^ \t\n\r\f\v\"]+)', respstring)
 	if len(possible_urls) > 1:
-		print('too many URLs')
+		debug_print('too many URLs')
 		for i in possible_urls:
-			print(i)
+			debug_print(i)
 	return possible_urls[0]
 
 # find and return particular custom field
-def process_mf2_data(post, valkey):
+def process_mf2_data(fields, valkey):
 	#print post.custom_fields
-    for i in post.custom_fields:
-        if i['key'] == valkey:
-            i['key'] = parse_response(i['value'])
-    return post
+    for i in fields.keys():
+        if i == valkey:
+            #TODO - add logic for keys in MF2_PARSE_FIELDS
+            if valkey == 'mf2_bookmark-of':
+                fields[valkey] = parse_response_list(fields[valkey], valkey)
+            else:
+                fields[valkey] = parse_response_re(fields[valkey])
+    return fields
 
 
 # remove id from xmlrpc returned custom_fields, return dict instead of list
+# only returns mf2-relevant data
 def get_clean_custom_fields(post):
 	fields = {}
 	for field in post.custom_fields:
 		#confirm if dictionary
 		fields[field['key']] = field['value']
+	keylist = fields.copy().keys()
+	for i in keylist:
+		if not i.startswith('mf2'):
+			debug_print('popping ' + i)
+			fields.pop(i)
 	return fields
 
 #prepend response properties URL to post content
@@ -93,28 +124,29 @@ for post in myposts:
     	#print trm.name
         if trm.name == 'Bookmark':
             debug_print( 'Bookmark')
-            process_mf2_data(post, 'mf2_bookmark-of')
+            process_mf2_data(customfields, 'mf2_bookmark-of')
         elif trm.name == 'Repost':
             debug_print( 'Repost')
-            process_mf2_data(post, 'mf2_repost-of')
+            process_mf2_data(customfields, 'mf2_repost-of')
         elif trm.name == 'Read':
             debug_print( 'Read')
-            process_mf2_data(post, 'mf2_read-of')
+            process_mf2_data(customfields, 'mf2_read-of')
         elif trm.name == 'Image':
             debug_print( 'Image')
-            process_mf2_data(post, 'mf2_photo')
+            process_mf2_data(customfields, 'mf2_photo')
         elif trm.name == 'Like':
             debug_print( 'Like')
-            process_mf2_data(post, 'mf2_like-of')
+            process_mf2_data(customfields, 'mf2_like-of')
         elif trm.name == 'Reply':
             debug_print( 'Reply')
-            process_mf2_data(post, 'mf2_in-reply-to')
+            process_mf2_data(customfields, 'mf2_in-reply-to')
         #TODO: add watch
 	#print post.custom_fields
 	#print post.post_status
 	#print "content: " + post.content + "\n\tterms: " + post.terms + "\n"
     #print( "\n")
     postdict['content'] = post.content
+    postdict['object'] = customfields
     itemdict = {}
     itemdict['@context'] = 'https://www.w3.org/ns/activitystreams'
     itemdict['object'] = postdict
