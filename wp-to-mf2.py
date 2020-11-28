@@ -136,24 +136,9 @@ for post in myposts:
     #postdict['object']
     for trm in post.terms:
     	#print trm.name
-        if trm.name == 'Bookmark':
-            debug_print( 'Bookmark')
-            customfields = process_mf2_data(customfields, 'mf2_bookmark-of')
-        elif trm.name == 'Repost':
-            debug_print( 'Repost')
-            customfields = process_mf2_data(customfields, 'mf2_repost-of')
-        elif trm.name == 'Read':
-            debug_print( 'Read')
-            customfields = process_mf2_data(customfields, 'mf2_read-of')
-        elif trm.name == 'Image':
-            debug_print( 'Image')
-            customfields = process_mf2_data(customfields, 'mf2_photo')
-        elif trm.name == 'Like':
-            debug_print( 'Like')
-            customfields = process_mf2_data(customfields, 'mf2_like-of')
-        elif trm.name == 'Reply':
-            debug_print( 'Reply')
-            customfields = process_mf2_data(customfields, 'mf2_in-reply-to')
+        if trm.name in MF2_TYPES:
+            debug_print(trm.name)
+            customfields = process_mf2_data(customfields, MF2_TYPES[trm.name])
         #TODO: add watch
 	#print post.custom_fields
 	#print post.post_status
