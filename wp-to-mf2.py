@@ -59,12 +59,12 @@ def parse_response_re(respstring):
 def process_mf2_data(fields, valkey):
 	#print post.custom_fields
     for i in fields.keys():
-        if i == valkey:
+        if i == MF2_TYPES[valkey]:
             #TODO - add logic for keys in MF2_PARSE_FIELDS
-            if valkey == 'mf2_bookmark-of':
-                fields[valkey] = parse_response_list(fields[valkey], valkey)
+            if i == 'mf2_bookmark-of':
+                fields[i] = parse_response_list(fields[i], valkey)
             else:
-                fields[valkey] = parse_response_re(fields[valkey])
+                fields[i] = parse_response_re(fields[i])
     return fields
 
 
@@ -88,18 +88,16 @@ def insert_url_content(post, customfields, mf2type):
     mf2typestr = MF2_TYPES[mf2type]
     if mf2type in usesection:
         urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"><a href=\"' + customfields[mf2typestr]['url'] + '\" class = \"p-name u-url\">'
-        urlstringmid = customfields[mf2typestr]['name'] + '</a>'
+    #section only seems to work on bookmark and like and reply, others put class directly in href linka
+        urlstringmid = customfields[mf2typestr]['name'] + '</a>' #TODO: change this to use MF2_PARSE_FIELDS
         strend = '<p>' + post.content + '</p></section>'
         return urlstringstart + urlstringmid + strend
     #elif mf2type = 'Image':
         #urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
     else: #default
         return post.content
-    
 
-    #section only seems to work on bookmark and like and reply, others put class directly in href linka
-    #TODO: parse name from custom field
-    
+#print debug statements
 def debug_print(string):
     if DEBUG:
         print(string)
@@ -123,12 +121,9 @@ author['nickname'] = blogauthor.nickname
 #author['image']['url'] = #image url - xmlrpc does not return this
 author['displayName'] = blogauthor.display_name
 
-# print term names and IDs
-#terms = client.call(taxonomies.GetTerms('kind'))
-#for term in terms:
-#	print "name: " + term.name + ", id: " + term.id
 
 totalitems = 5
+itemoffset = 0 #modify for testing, or use in loop iteration over all posts
 
 myposts = client.call(posts.GetPosts({'number': totalitems, 'offset': 0, 'post-status': 'publish'}))
 for post in myposts:
@@ -143,21 +138,16 @@ for post in myposts:
     postdict['author'] = author
     customfields = get_clean_custom_fields(post)
     debug_print(customfields)
-    #postdict['object']
     for trm in post.terms:
     	#print trm.name
         if trm.name in MF2_TYPES:
             debug_print(trm.name)
             customfields = process_mf2_data(customfields, trm.name)
         #TODO: add watch
-	#print post.custom_fields
-	#print post.post_status
-	#print "content: " + post.content + "\n\tterms: " + post.terms + "\n"
-    #print( "\n")
     postdict['content'] = post.content
-    #postdict['object'] = customfields
+    #TODO: add tags, from post.terms
     itemdict = {}
-    itemdict['@context'] = 'https://www.w3.org/ns/activitystreams'
+    #itemdict['@context'] = 'https://www.w3.org/ns/activitystreams'  #not sure this is necessary
     itemdict['object'] = postdict
     mf2dict['items'].append(itemdict)
 	
@@ -167,6 +157,3 @@ debug_print('\n')
 mf2 = microformats2.object_to_json(mf2dict)
 print(mf2)
 
-#types = client.call(posts.GetPostTypes())
-#print types
-#post, page, attachment
