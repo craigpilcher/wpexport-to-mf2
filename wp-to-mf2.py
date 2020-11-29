@@ -92,7 +92,7 @@ def insert_url_content(post, customfields, mf2type):
         strend = '<p>' + post.content + '</p></section>'
         return urlstringstart + urlstringmid + strend
     #elif mf2type = 'Image':
-        urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
+        #urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
     else: #default
         return post.content
     
