@@ -90,12 +90,12 @@ def insert_url_content(post, customfields, mf2type):
         strend = '<p>' + post.content + '</p></section>'
         debug_print('content: ' + urlstringstart + urlstringmid + strend)
         return urlstringstart + urlstringmid + strend
-    elif mf2type = 'Image':
+    elif mf2type == 'Image':
         urlstring = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" src=\"' + customfields[mf2typestr]+ ' />'
-	return urlstring
+        return urlstring + '<p>' + post.content + '</p>'
     else: #default
-	urlstring = '<a class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" href=\"' + customfields[mf2typestr] + '\">'
-        return urlstring
+        urlstring = '<a class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" href=\"' + customfields[mf2typestr] + '\">' + customfields[mf2typestr] + '</a>'
+        return urlstring + '<p>' + post.content + '</p>'
 
 #print debug statements
 def debug_print(string):
