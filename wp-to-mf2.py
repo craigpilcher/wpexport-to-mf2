@@ -16,7 +16,7 @@ MF2_TYPES = {
 
 MF2_URL_CLASSES = {
         'mf2_bookmark-of' : 'response u-bookmark-of h-cite',
-        'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
+        'mf2_repost-of' : 'h-cite response u-repost-of', 
         'mf2_read-of': 'h-cite response u-read-of',
         'mf2_photo' : 'response attachment-large u-photo',
         'mf2_like-of' : 'response u-like-of h-cite',
@@ -27,11 +27,7 @@ MF2_URL_CLASSES = {
 #('url', 'name')
 MF2_PARSE_FIELDS = {
         'mf2_bookmark-of' : ('url', 'name'),
-        #'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
-        #'mf2_read-of': 'h-cite response u-read-of',
-        #'mf2_photo' : 'response attachment-large u-photo',
-        #'mf2_like-of' : 'response u-like-of h-cite',
-        #'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
+        #fill these in for fields in other globals if they come up
     }
 
 #split garbled string, pull out relevant items
@@ -94,10 +90,12 @@ def insert_url_content(post, customfields, mf2type):
         strend = '<p>' + post.content + '</p></section>'
         debug_print('content: ' + urlstringstart + urlstringmid + strend)
         return urlstringstart + urlstringmid + strend
-    #elif mf2type = 'Image':
-        #urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
+    elif mf2type = 'Image':
+        urlstring = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" src=\"' + customfields[mf2typestr]+ ' />'
+	return urlstring
     else: #default
-        return post.content
+	urlstring = '<a class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" href=\"' + customfields[mf2typestr] + '\">'
+        return urlstring
 
 #print debug statements
 def debug_print(string):
