@@ -123,7 +123,7 @@ author['displayName'] = blogauthor.display_name
 
 
 totalitems = 5
-itemoffset = 0 #modify for testing, or use in loop iteration over all posts
+itemoffset = 50 #modify for testing, or use in loop iteration over all posts
 
 myposts = client.call(posts.GetPosts({'number': totalitems, 'offset': 0, 'post-status': 'publish'}))
 for post in myposts:
@@ -137,7 +137,7 @@ for post in myposts:
     postdict['displayName'] = post.title
     postdict['author'] = author
     customfields = get_clean_custom_fields(post)
-    debug_print(customfields)
+    #debug_print(customfields)
     for trm in post.terms:
     	#print trm.name
         if trm.name in MF2_TYPES:
