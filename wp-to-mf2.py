@@ -5,10 +5,10 @@ import sys,re,string
 
 DEBUG = 1
 MF2_TYPES = {
-        'bookmark' : 'mf2_bookmark-of',
-        'repost' : 'mf2_repost-of',
-        'read' : 'mf2_read-of',
-        'image' : 'mf2_photo',
+        'Bookmark' : 'mf2_bookmark-of',
+        'Repost' : 'mf2_repost-of',
+        'Read' : 'mf2_read-of',
+        'Image' : 'mf2_photo',
         'Like': 'mf2_like-of',
         'Reply' : 'mf2_in-reply-to',
         #TODO: add watch
@@ -62,7 +62,7 @@ def process_mf2_data(fields, valkey):
         if i == MF2_TYPES[valkey]:
             #TODO - add logic for keys in MF2_PARSE_FIELDS
             if i == 'mf2_bookmark-of':
-                fields[i] = parse_response_list(fields[i], valkey)
+                fields[i] = parse_response_list(fields[i], i)
             else:
                 fields[i] = parse_response_re(fields[i])
     return fields
@@ -78,7 +78,7 @@ def get_clean_custom_fields(post):
 	keylist = fields.copy().keys()
 	for i in keylist:
 		if not i.startswith('mf2'):
-			debug_print('popping ' + i)
+                    #debug_print('popping ' + i) #TODO: sample more posts with this enabled
 			fields.pop(i)
 	return fields
 
@@ -86,11 +86,13 @@ def get_clean_custom_fields(post):
 def insert_url_content(post, customfields, mf2type):
     usesection = ('Bookmark', 'Like', 'Reply')
     mf2typestr = MF2_TYPES[mf2type]
+    debug_print(mf2typestr)
     if mf2type in usesection:
         urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"><a href=\"' + customfields[mf2typestr]['url'] + '\" class = \"p-name u-url\">'
     #section only seems to work on bookmark and like and reply, others put class directly in href linka
         urlstringmid = customfields[mf2typestr]['name'] + '</a>' #TODO: change this to use MF2_PARSE_FIELDS
         strend = '<p>' + post.content + '</p></section>'
+        debug_print('content: ' + urlstringstart + urlstringmid + strend)
         return urlstringstart + urlstringmid + strend
     #elif mf2type = 'Image':
         #urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
@@ -143,6 +145,8 @@ for post in myposts:
         if trm.name in MF2_TYPES:
             debug_print(trm.name)
             customfields = process_mf2_data(customfields, trm.name)
+            post.content = insert_url_content(post,customfields,trm.name)
+            debug_print('returned: ' + post.content)
         #TODO: add watch
     postdict['content'] = post.content
     #TODO: add tags, from post.terms
