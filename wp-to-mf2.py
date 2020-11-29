@@ -11,7 +11,7 @@ MF2_TYPES = {
         'Image' : 'mf2_photo',
         'Like': 'mf2_like-of',
         'Reply' : 'mf2_in-reply-to',
-        #TODO: add watch
+        'Watch' : 'mf2_watch-of',
         }
 
 MF2_URL_CLASSES = {
@@ -21,7 +21,7 @@ MF2_URL_CLASSES = {
         'mf2_photo' : 'response attachment-large u-photo',
         'mf2_like-of' : 'response u-like-of h-cite',
         'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
-        #TODO: add watch
+        'mf2_watch-of' : 'response u-watch-of h-cite',
         }
 		
 #('url', 'name')
@@ -147,7 +147,6 @@ for post in myposts:
             customfields = process_mf2_data(customfields, trm.name)
             post.content = insert_url_content(post,customfields,trm.name)
             debug_print('returned: ' + post.content)
-        #TODO: add watch
     postdict['content'] = post.content
     #TODO: add tags, from post.terms
     itemdict = {}
