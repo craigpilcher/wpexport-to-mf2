@@ -84,9 +84,19 @@ def get_clean_custom_fields(post):
 
 #prepend response properties URL to post content
 def insert_url_content(post, customfields, mf2type):
-    if mf2type = bookmark:
-        urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2type] + '\"><a href=\"' + customfields[mf2type]) + '\" class = \"p-name u-url\">'
-        urlstringmid = customfields[MF2_PARSE_FIELDS[mf2type]]
+    usesection = ('Bookmark', 'Like', 'Reply')
+    mf2typestr = MF2_TYPES[mf2type]
+    if mf2type in usesection:
+        urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"><a href=\"' + customfields[mf2typestr]['url'] + '\" class = \"p-name u-url\">'
+        urlstringmid = customfields[mf2typestr]['name'] + '</a>'
+        strend = '<p>' + post.content + '</p></section>'
+        return urlstringstart + urlstringmid + strend
+    #elif mf2type = 'Image':
+        urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
+    else: #default
+        return post.content
+    
+
     #section only seems to work on bookmark and like and reply, others put class directly in href linka
     #TODO: parse name from custom field
     
@@ -138,7 +148,7 @@ for post in myposts:
     	#print trm.name
         if trm.name in MF2_TYPES:
             debug_print(trm.name)
-            customfields = process_mf2_data(customfields, MF2_TYPES[trm.name])
+            customfields = process_mf2_data(customfields, trm.name)
         #TODO: add watch
 	#print post.custom_fields
 	#print post.post_status
