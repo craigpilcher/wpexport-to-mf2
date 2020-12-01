@@ -11,28 +11,25 @@ MF2_TYPES = {
         'Image' : 'mf2_photo',
         'Like': 'mf2_like-of',
         'Reply' : 'mf2_in-reply-to',
-        #TODO: add watch
+        'Watch' : 'mf2_watch-of',
         }
 
 MF2_URL_CLASSES = {
         'mf2_bookmark-of' : 'response u-bookmark-of h-cite',
-        'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
+        'mf2_repost-of' : 'h-cite response u-repost-of', 
         'mf2_read-of': 'h-cite response u-read-of',
         'mf2_photo' : 'response attachment-large u-photo',
         'mf2_like-of' : 'response u-like-of h-cite',
         'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
-        #TODO: add watch
+        'mf2_watch-of' : 'response u-watch-of h-cite',
         }
 		
 #('url', 'name')
 MF2_PARSE_FIELDS = {
         'mf2_bookmark-of' : ('url', 'name'),
-        #'mf2_repost-of' : 'h-cite response u-repost-of', #'response'
-        #'mf2_read-of': 'h-cite response u-read-of',
-        #'mf2_photo' : 'response attachment-large u-photo',
-        #'mf2_like-of' : 'response u-like-of h-cite',
-        #'mf2_in-reply-to' : 'h-cite response u-in-reply-to',
+        #fill these in for fields in other globals if they come up
     }
+SYNDLINKS = 'mf2_syndication'
 
 #split garbled string, pull out relevant items
 def parse_response_list(respstring, valkey):
@@ -43,17 +40,25 @@ def parse_response_list(respstring, valkey):
         if strlist[i] in MF2_PARSE_FIELDS[valkey]:
             retdict[strlist[i]] = strlist[i+2]
         i += 1
+    if len(retdict) == 0:
+        retdict['url'] = respstring
+        retdict['name'] = respstring
     return retdict
 
 # pull relevant URL out of garbled metadata
-def parse_response_re(respstring):
-	#print respstring
-	possible_urls = re.findall(r'(http[s?]://[^ \t\n\r\f\v\"]+)', respstring)
-	if len(possible_urls) > 1:
-		debug_print('too many URLs')
-		for i in possible_urls:
-			debug_print(i)
-	return possible_urls[0]
+def parse_response_urlstr(respstring):
+    #debug_print(respstring)
+    possible_urls = re.findall(r'(http[s?]://[^ \t\n\r\f\v\"]+)', respstring)
+    if len(possible_urls) > 1:
+        debug_print('too many URLs')
+        for i in possible_urls:
+            debug_print(i)
+    elif len(possible_urls) == 0: #no hits, no chnage
+        if respstring.count('http') > 0:
+            return respstring
+        else:
+            return ''
+    return possible_urls[0]
 
 # find and return particular custom field
 def process_mf2_data(fields, valkey):
@@ -64,7 +69,7 @@ def process_mf2_data(fields, valkey):
             if i == 'mf2_bookmark-of':
                 fields[i] = parse_response_list(fields[i], i)
             else:
-                fields[i] = parse_response_re(fields[i])
+                fields[i] = parse_response_urlstr(fields[i])
     return fields
 
 
@@ -87,17 +92,35 @@ def insert_url_content(post, customfields, mf2type):
     usesection = ('Bookmark', 'Like', 'Reply')
     mf2typestr = MF2_TYPES[mf2type]
     debug_print(mf2typestr)
+    syndurls = ''
+    if SYNDLINKS in customfields:
+        syndurls = '\n<p>Also on: ' + customfields[SYNDLINKS] + '</p>'
     if mf2type in usesection:
-        urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"><a href=\"' + customfields[mf2typestr]['url'] + '\" class = \"p-name u-url\">'
+        url = ''
+        try:
+            url = customfields[mf2typestr]['url'] #figure out better way to find if this is a list
+            name = customfields[mf2typestr]['name']
+        except:
+            debug_print('bookmark not a tuple')
+            debug_print(customfields[mf2typestr])
+            url = customfields[mf2typestr]
+            name = url
+        urlstringstart = '<section class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"><a href=\"' + url + '\" class = \"p-name u-url\">'
     #section only seems to work on bookmark and like and reply, others put class directly in href linka
-        urlstringmid = customfields[mf2typestr]['name'] + '</a>' #TODO: change this to use MF2_PARSE_FIELDS
-        strend = '<p>' + post.content + '</p></section>'
+        urlstringmid = name + '</a>' #TODO: change this to use MF2_PARSE_FIELDS
+        strend = '<p>' + post.content + '</p>' + syndurls + '</section>'
         debug_print('content: ' + urlstringstart + urlstringmid + strend)
         return urlstringstart + urlstringmid + strend
-    #elif mf2type = 'Image':
-        #urlstringstart = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\"' + customfields[]+ '>'
+    elif mf2type == 'Image':
+        try:
+            urlstring = '<img class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" src=\"' + customfields[mf2typestr]+ ' />'
+            return urlstring + '<p>' + post.content + '</p>' + syndurls
+        except:
+            #TODO: function to insert MF2)URL_CLASSES into cisting img tag class string
+            return post.content + syndurls
     else: #default
-        return post.content
+        urlstring = '<a class=\"' + MF2_URL_CLASSES[mf2typestr] + '\" href=\"' + customfields[mf2typestr] + '\">' + customfields[mf2typestr] + '</a>'
+        return urlstring + '<p>' + post.content + '</p>' + syndurls
 
 #print debug statements
 def debug_print(string):
@@ -125,9 +148,9 @@ author['displayName'] = blogauthor.display_name
 
 
 totalitems = 5
-itemoffset = 0 #modify for testing, or use in loop iteration over all posts
+itemoffset = 70 #modify for testing, or use in loop iteration over all posts
 
-myposts = client.call(posts.GetPosts({'number': totalitems, 'offset': 0, 'post-status': 'publish'}))
+myposts = client.call(posts.GetPosts({'number': totalitems, 'offset': itemoffset, 'post-status': 'publish'}))
 for post in myposts:
 	#print post.post_status
     postdict = {}
@@ -139,15 +162,25 @@ for post in myposts:
     postdict['displayName'] = post.title
     postdict['author'] = author
     customfields = get_clean_custom_fields(post)
-    debug_print(customfields)
+    #debug_print(customfields)
     for trm in post.terms:
     	#print trm.name
         if trm.name in MF2_TYPES:
             debug_print(trm.name)
+            #if trm.name == 'Image':
+                #debug_print('initial content: ' + post.content)
             customfields = process_mf2_data(customfields, trm.name)
+            if trm.name == 'Image':
+                debug_print('fields: ')
+                debug_print(customfields)
+            if SYNDLINKS in customfields.keys():
+                syndlink = parse_response_urlstr(customfields[SYNDLINKS])
+                if syndlink == '':
+                    del customfields[SYNDLINKS]
+                else:
+                    customfields[SYNDLINKS] = syndlink
             post.content = insert_url_content(post,customfields,trm.name)
             debug_print('returned: ' + post.content)
-        #TODO: add watch
     postdict['content'] = post.content
     #TODO: add tags, from post.terms
     itemdict = {}
